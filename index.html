@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwarStream | Digital Audio & Streaming Platform</title>
+    <style>
+        :root, [data-theme="default"] {
+            --primary: #1db954;
+            --primary-dark: #15803d;
+            --primary-fg: #ffffff;
+            --bg-top: #e8f5ee;
+            --bg-mid: #f4f8f6;
+            --bg-bottom: #f8fafc;
+            --surface: rgba(255, 255, 255, 0.92);
+            --surface-solid: #ffffff;
+            --card-hover: #f0fdf4;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(15, 23, 42, 0.1);
+            --shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+            --nav-bg: rgba(255, 255, 255, 0.88);
+            --input-bg: #f1f5f9;
+        }
+
+        [data-theme="light"] {
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --primary-fg: #ffffff;
+            --bg-top: #ffffff;
+            --bg-mid: #f8fafc;
+            --bg-bottom: #f1f5f9;
+            --surface: #ffffff;
+            --surface-solid: #ffffff;
+            --card-hover: #f8fafc;
+            --text: #090d16;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            --nav-bg: rgba(255, 255, 255, 0.96);
+            --input-bg: #f8fafc;
+        }
+
+        [data-theme="dark"] {
+            --primary: #1ed760;
+            --primary-dark: #1db954;
+            --primary-fg: #041d0d;
+            --bg-top: #102418;
+            --bg-mid: #121212;
+            --bg-bottom: #090909;
+            --surface: rgba(24, 24, 24, 0.94);
+            --surface-solid: #181818;
+            --card-hover: #242424;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+            --nav-bg: rgba(18, 18, 18, 0.92);
+            --input-bg: #222222;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 30%, var(--bg-bottom) 100%);
+            background-attachment: fixed;
+            color: var(--text);
+            padding-bottom: 185px;
+            min-height: 100vh;
+            transition: background 0.2s, color 0.2s;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Suppress third-party deployment overlays */
+        [data-netlify-deploy-id],
+        iframe[src*="netlify"],
+        div[id*="netlify"],
+        a[href*="netlify.com"][style*="fixed"],
+        aside[aria-label*="Netlify"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        svg.icon {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        /* Navbar */
+        nav {
+            background: var(--nav-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 13px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-wrap {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: var(--primary-fg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .greeting-sub {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .logo {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill-badge {
+            background: var(--surface-solid);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: border-color 0.15s;
+        }
+
+        .pill-badge:hover {
+            border-color: var(--primary);
+        }
+
+        /* Navigation Tabs */
+        .app-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 14px 16px 4px;
+            max-width: 880px;
+            margin: 0 auto;
+            scrollbar-width: none;
+        }
+        .app-tabs::-webkit-scrollbar { display: none; }
+
+        .app-tab {
+            background: var(--surface);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .app-tab.active {
+            background: var(--primary);
+            color: var(--primary-fg);
+            border-color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 14px 16px;
+        }
+
+        /* Search Bar */
+        .search-wrap {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .search-icon-left {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 40px 12px 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface-solid);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            box-shadow: var(--shadow);
+        }
+
+        .search-box:focus {
+            border-color: var(--primary);
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 11px;
+            cursor: pointer;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Genre Filter Pills */
+        .genres {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+            scrollbar-width: none;
+        }
+        .genres::-webkit-scrollbar { display: none; }
+
+        .genre-pill {
+            background: var(--surface);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .genre-pill.active {
+            background: var(--text);
+            color: var(--surface-solid);
+            border-color: var(--text);
+        }
+
+        /* Section Headers */
+        .sec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0 12px;
+        }
+
+        .sec-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .sec-link {
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 600;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        /* Quick Picks Grid */
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-card {
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: background 0.15s;
+        }
+
+        .quick-card:hover { background: var(--card-hover); }
+
+        .quick-card img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .quick-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px;
+        }
+
+        /* Circular Artists */
+        .artists-row {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 18px;
+            scrollbar-width: none;
+        }
+        .artists-row::-webkit-scrollbar { display: none; }
+
+        .artist-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 72px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .artist-chip img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+            margin-bottom: 6px;
+        }
+
+        .artist-chip.active img {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.25);
+        }
+
+        .artist-chip span {
+            font-size: 11px;
+            font-weight: 600;
+            max-width: 72px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Song List */
+        .song-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .song-row {
+            background: var(--surface-solid);
+            padding: 10px 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        .song-row:hover { background: var(--card-hover); }
+
+        .song-row.playing {
+            background: var(--primary);
+            border-color: var(--primary-dark);
+        }
+
+        .song-row.playing .song-title,
+        .song-row.playing .song-artist,
+        .song-row.playing .meta-pill {
+            color: var(--primary-fg) !important;
+        }
+
+        .song-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .song-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .song-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-artist {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .song-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            background: rgba(125, 125, 125, 0.1);
+            border: none;
+            color: var(--text);
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .song-row.playing .icon-btn {
+            background: rgba(0, 0, 0, 0.15);
+            color: var(--primary-fg);
+        }
+
+        .play-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--primary-fg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .song-row.playing .play-icon {
+            background: var(--primary-fg);
+            color: var(--primary);
+        }
+
+        /* Cards & Badges */
+        .card-box {
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .playlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .pl-card {
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .badge-approved { background: #dcfce7; color: #166534; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-neutral { background: #e2e8f0; color: #334155; }
+
+        /* Elevated Bottom Player */
+        .bottom-player {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 24px);
+            max-width: 850px;
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(18px);
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 12px 16px;
+            z-index: 2147483000;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+        }
+
+        .player-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-width: 0;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .now-playing img {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ctrl-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ctrl-btn.active-mode { color: #1ed760; }
+
+        .ctrl-play {
+            background: #1ed760;
+            color: #041d0d;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .player-sub-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        audio {
+            width: 100%;
+            height: 28px;
+        }
+
+        .mini-pill {
+            background: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+            border: none;
+            padding: 6px 11px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mini-pill.accent {
+            background: #1ed760;
+            color: #041d0d;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2147483500;
+            padding: 16px;
+        }
+
+        .modal-card {
+            background: var(--surface-solid);
+            color: var(--text);
+            padding: 22px;
+            border-radius: 14px;
+            max-width: 460px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 13px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 11px 14px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: var(--primary-fg);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-primary:disabled { opacity: 0.6; }
+
+        .btn-sm {
+            padding: 6px 11px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-del { background: #fee2e2; color: #b91c1c; }
+        .btn-edit { background: #e0f2fe; color: #0369a1; }
+        .btn-approve { background: #dcfce7; color: #166534; }
+
+        /* Payment QR Container */
+        .qr-panel {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+
+        .qr-panel img {
+            width: 190px;
+            height: 190px;
+            object-fit: contain;
+            margin: 10px auto;
+            display: block;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <div class="brand-wrap">
+            <div class="brand-mark">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <div>
+                <div class="greeting-sub" id="greetingText">Digital Audio Library</div>
+                <div class="logo"><span>Swar</span>Stream</div>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button class="pill-badge" id="themeToggleBtn" onclick="cycleTheme()">Theme: Default</button>
+            <button class="pill-badge" onclick="switchTab('offline')">
+                Offline Vault (<span id="offlineCount">0</span>)
+            </button>
+            <button class="pill-badge hidden" id="secretDashboardBtn" onclick="openAdminDashboard()">Admin Studio</button>
+        </div>
+    </nav>
+
+    <!-- MAIN NAVIGATION TABS -->
+    <div id="mainAppTabs" class="app-tabs">
+        <button class="app-tab active" onclick="switchTab('home', this)">Browse Catalog</button>
+        <button class="app-tab" onclick="switchTab('playlists', this)">Playlists</button>
+        <button class="app-tab" onclick="switchTab('posts', this)">Community Feed</button>
+        <button class="app-tab" onclick="switchTab('offline', this)">Offline Downloads</button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- USER VIEW                                  -->
+    <!-- ========================================== -->
+    <div id="user-view" class="container">
+
+        <!-- Persistent Search Bar -->
+        <div class="search-wrap">
+            <span class="search-icon-left">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" id="searchInput" class="search-box" placeholder="Search tracks, artists, albums, or lyrics..." oninput="handleSearchInput()">
+            <button id="clearSearchBtn" class="clear-search hidden" onclick="clearSearch()">X</button>
+        </div>
+
+        <!-- TAB 1: BROWSE CATALOG -->
+        <div id="tab-home">
+            <div class="genres" id="genreTabs">
+                <button class="genre-pill active" onclick="setGenre('All', this)">All Tracks</button>
+                <button class="genre-pill" onclick="setGenre('Liked', this)">Favorites</button>
+                <button class="genre-pill" onclick="setGenre('Indie & Bollywood', this)">Indie & Bollywood</button>
+                <button class="genre-pill" onclick="setGenre('Lo-Fi & Chill', this)">Lo-Fi & Chill</button>
+                <button class="genre-pill" onclick="setGenre('Hip-Hop & Trap', this)">Hip-Hop & Trap</button>
+                <button class="genre-pill" onclick="setGenre('Sufi & Devotional', this)">Sufi & Devotional</button>
+                <button class="genre-pill" onclick="setGenre('Indian Classical & Fusion', this)">Classical & Fusion</button>
+            </div>
+
+            <div id="quickPicksSection">
+                <div class="sec-header">
+                    <h3>Featured Selections</h3>
+                    <button class="sec-link" onclick="playRandomSong()">Shuffle Catalog</button>
+                </div>
+                <div class="quick-grid" id="quickGrid"></div>
+            </div>
+
+            <div id="artistsSection">
+                <div class="sec-header">
+                    <h3>Featured Artists</h3>
+                    <button class="sec-link hidden" id="resetArtistBtn" onclick="clearArtistFilter()">Reset Filter</button>
+                </div>
+                <div class="artists-row" id="artistsList"></div>
+            </div>
+
+            <div class="sec-header">
+                <h3 id="trackListHeading">Catalog Tracks</h3>
+                <span style="font-size:12px; color:var(--muted); font-weight:600;" id="trackCountLabel">0 tracks</span>
+            </div>
+            <div class="song-list" id="songList">
+                <p style="text-align:center; color:var(--muted); padding:32px;">Loading audio catalog...</p>
+            </div>
+        </div>
+
+        <!-- TAB 2: PLAYLISTS -->
+        <div id="tab-playlists" class="hidden">
+            <div class="card-box">
+                <h3 style="font-size:15px; margin-bottom:12px;">Create New Playlist</h3>
+                <input type="text" id="newPlName" placeholder="Playlist title (e.g., Evening Acoustic)">
+                <input type="text" id="newPlCreator" placeholder="Curator name">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <label style="margin:0;">Visibility Setting</label>
+                    <select id="newPlVisibility" style="width:auto; margin:0;">
+                        <option value="public">Public (Visible to all listeners)</option>
+                        <option value="private">Private (Visible only on this device)</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="createPlaylist()">Save Playlist</button>
+            </div>
+
+            <div class="sec-header">
+                <h3>Public & Personal Playlists</h3>
+            </div>
+            <div class="playlist-grid" id="playlistGrid"></div>
+        </div>
+
+        <!-- TAB 3: COMMUNITY POSTS -->
+        <div id="tab-posts" class="hidden">
+            <div class="card-box">
+                <h3 style="font-size:15px; margin-bottom:12px;">Publish Community Post</h3>
+                <input type="text" id="postAuthor" placeholder="Your name">
+                <select id="postCategory">
+                    <option value="Track Request">Track Request / Suggestion</option>
+                    <option value="Listener Review">Listener Review</option>
+                    <option value="Original Lyrics">Original Lyrics / Composition</option>
+                </select>
+                <textarea id="postContent" rows="3" placeholder="Share your thoughts, lyrics, or track requests..."></textarea>
+                <button class="btn-primary" onclick="publishCommunityPost()">Publish Post</button>
+            </div>
+
+            <div class="sec-header">
+                <h3>Recent Discussions</h3>
+            </div>
+            <div id="communityFeedList"></div>
+        </div>
+
+        <!-- TAB 4: OFFLINE DOWNLOADS VAULT -->
+        <div id="tab-offline" class="hidden">
+            <div class="card-box">
+                <h3 style="font-size:15px; margin-bottom:6px;">Offline Storage & Download Licenses</h3>
+                <p style="font-size:13px; color:var(--muted); line-height:1.5;">
+                    Online streaming is free for all listeners. To unlock local device downloads for any track, complete the ₹1.00 UPI payment and submit your transaction reference. Downloads are activated within 24 hours following payment verification.
+                </p>
+            </div>
+
+            <div class="sec-header">
+                <h3>Your Offline Requests & Approved Tracks</h3>
+            </div>
+            <div class="song-list" id="offlineSongList"></div>
+        </div>
+
+    </div>
+
+    <!-- ELEVATED BOTTOM PLAYER -->
+    <div id="bottomPlayer" class="bottom-player hidden">
+        <div class="player-top">
+            <div class="now-playing" onclick="openSongDetailModal()">
+                <img id="playerCover" src="" alt="Cover">
+                <div style="min-width:0;">
+                    <div id="playerTitle" style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Track Title</div>
+                    <div id="playerArtist" style="font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Artist • Click for details & comments</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="ctrl-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Shuffle">
+                    <svg class="icon" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                </button>
+                <button class="ctrl-btn" onclick="prevSong()" title="Previous">
+                    <svg class="icon" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+                </button>
+                <button class="ctrl-play" id="mainPlayBtn" onclick="togglePlay()" title="Play/Pause">Play</button>
+                <button class="ctrl-btn" onclick="nextSong()" title="Next">
+                    <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+                </button>
+                <button class="ctrl-btn" id="repeatBtn" onclick="toggleRepeat()" title="Repeat">
+                    <svg class="icon" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div class="player-sub-bar">
+            <audio id="audioElement" controls controlsList="nodownload"></audio>
+            <button class="mini-pill" onclick="openSongDetailModal()">Details & Comments</button>
+            <button class="mini-pill accent" onclick="triggerOfflineDownload()">Offline Save (₹1)</button>
+        </div>
+        <a id="extLinkBtn" href="#" target="_blank" class="btn-primary hidden" style="margin-top:8px; text-align:center; display:block; text-decoration:none;">Open External Stream</a>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ADMIN STUDIO VIEW                          -->
+    <!-- ========================================== -->
+    <div id="admin-view" class="container hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h2 style="font-size:19px; font-weight:700;">Admin Studio</h2>
+            <div style="display:flex; gap:8px;">
+                <button class="pill-badge" onclick="backToMusic()">Return to Catalog</button>
+                <button class="btn-sm btn-del" onclick="adminLogout()">Sign Out</button>
+            </div>
+        </div>
+
+        <!-- PAYMENT APPROVAL QUEUE (24-HOUR VERIFICATION) -->
+        <div class="card-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:15px;">Offline Download Payment Approvals</h3>
+                <span class="status-badge badge-pending" id="pendingApprovalCount">0 Pending</span>
+            </div>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+                Verify ₹1.00 UPI payments received on <b>singhakshay24453@okicici</b> and approve user download access within 24 hours.
+            </p>
+            <div id="adminPaymentList"></div>
+        </div>
+
+        <!-- UPLOAD / EDIT TRACK FORM -->
+        <div class="card-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-size:15px;">Publish or Edit Track</h3>
+                <button type="button" class="btn-sm btn-edit" onclick="runSmartAI()">Auto-Fill Metadata</button>
+            </div>
+
+            <input type="hidden" id="editingSongId" value="">
+
+            <label>1. Audio File (.mp3 / .wav - Max 3.5MB) *</label>
+            <input type="file" id="audioFileInput" accept="audio/*" onchange="onAudioFilePicked(event)">
+
+            <label>Or Direct Audio / Stream URL</label>
+            <input type="url" id="audioLinkInput" placeholder="https://example.com/track.mp3" onchange="onAudioLinkTyped()">
+
+            <label>2. Track Title *</label>
+            <input type="text" id="songTitleInput" placeholder="Enter track title">
+
+            <label>3. Artist / Composer Name *</label>
+            <input type="text" id="songArtistInput" placeholder="Enter artist name">
+
+            <label>4. Genre *</label>
+            <select id="songGenreInput">
+                <option value="Indie & Bollywood">Indie & Bollywood</option>
+                <option value="Lo-Fi & Chill">Lo-Fi & Chill</option>
+                <option value="Hip-Hop & Trap">Hip-Hop & Trap</option>
+                <option value="Sufi & Devotional">Sufi & Devotional</option>
+                <option value="Indian Classical & Fusion">Indian Classical & Fusion</option>
+            </select>
+
+            <label>5. Album / Release Name</label>
+            <input type="text" id="songAlbumInput" placeholder="e.g., Studio Singles 2026">
+
+            <label>6. Language & Release Year</label>
+            <input type="text" id="songMetaExtraInput" placeholder="e.g., Hindi • 2026">
+
+            <label>7. Lyrics & Track Notes</label>
+            <textarea id="songLyricsInput" rows="3" placeholder="Enter lyrics or production credits..."></textarea>
+
+            <label>8. Cover Artwork (Optional)</label>
+            <input type="file" id="coverFileInput" accept="image/*" onchange="onCoverPicked(event)">
+            <img id="adminCoverPreview" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80" style="width:64px; height:64px; object-fit:cover; border-radius:8px; margin-bottom:12px;">
+
+            <button class="btn-primary" id="publishBtn" onclick="publishSong()">Publish Track</button>
+            <button class="pill-badge hidden" id="cancelEditBtn" onclick="resetAdminForm()" style="width:100%; margin-top:8px; justify-content:center;">Cancel Edit</button>
+        </div>
+
+        <!-- EXISTING SONGS -->
+        <div class="card-box">
+            <h3 style="font-size:15px; margin-bottom:10px;">Published Catalog</h3>
+            <div id="adminSongList"></div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODALS                                     -->
+    <!-- ========================================== -->
+
+    <!-- 1. SONG DETAILS & COMMENTS MODAL -->
+    <div id="songDetailModal" class="modal hidden">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:11px; font-weight:700; color:var(--primary-dark); letter-spacing:0.5px;">TRACK INFORMATION</span>
+                <button onclick="closeDetailModal()" style="background:none; border:none; font-size:16px; color:var(--text); cursor:pointer;">Close</button>
+            </div>
+
+            <img id="detailCover" src="" style="width:100%; height:190px; object-fit:cover; border-radius:10px; margin-bottom:12px;">
+            <h3 id="detailTitle" style="font-size:18px; font-weight:700;">Title</h3>
+            <p id="detailArtist" style="font-size:13px; color:var(--muted); margin-bottom:8px;">Artist</p>
+            <p id="detailExtraInfo" style="font-size:12px; background:var(--input-bg); padding:8px 10px; border-radius:8px; margin-bottom:12px;"></p>
+
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
+                <button class="btn-primary" onclick="triggerOfflineDownload()" style="flex:1;">Request Offline Download (₹1)</button>
+                <button class="pill-badge" onclick="openAddToPlaylistModal(currentSongId)">Add to Playlist</button>
+            </div>
+
+            <div style="text-align:left; margin-bottom:14px;">
+                <h4 style="font-size:13px; margin-bottom:6px;">Lyrics & Liner Notes</h4>
+                <div id="detailLyrics" style="font-size:12px; color:var(--muted); background:var(--input-bg); padding:10px; border-radius:8px; white-space:pre-line; max-height:110px; overflow-y:auto;"></div>
+            </div>
+
+            <div style="text-align:left;">
+                <h4 style="font-size:13px; margin-bottom:8px;">Listener Comments</h4>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                    <input type="text" id="commentUserInput" placeholder="Name" style="width:32%; margin:0;">
+                    <input type="text" id="commentTextInput" placeholder="Write a comment..." style="flex:1; margin:0;">
+                    <button class="btn-sm" style="background:var(--primary); color:var(--primary-fg);" onclick="postSongComment()">Post</button>
+                </div>
+                <div id="songCommentsList" style="max-height:140px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ₹1 UPI PAYMENT & 24-HOUR APPROVAL REQUEST MODAL -->
+    <div id="payModal" class="modal hidden">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="font-size:16px; font-weight:700;">Offline Download Authorization</h3>
+                <button onclick="document.getElementById('payModal').classList.add('hidden')" style="background:none; border:none; color:var(--muted); cursor:pointer;">Close</button>
+            </div>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:12px; line-height:1.45;">
+                Complete a <b>₹1.00</b> payment via any UPI app using the QR code below. Your offline download will be enabled within <b>24 hours</b> upon admin verification.
+            </p>
+
+            <div class="qr-panel">
+                <div style="font-size:13px; font-weight:700;">Akshay Singh</div>
+                <div style="font-size:12px; color:#15803d; font-weight:700; margin-top:2px;">Amount: ₹1.00</div>
+                <!-- Official UPI QR for singhakshay24453@okicici -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3Dsinghakshay24453%40okicici%26pn%3DAkshay%2520Singh%26am%3D1.00%26cu%3DINR" alt="UPI Payment QR">
+                <div style="font-size:12px; font-weight:600; color:#334155;">UPI ID: singhakshay24453@okicici</div>
+                <div style="font-size:11px; color:#64748b; margin-top:3px;">Scan to pay with any UPI app</div>
+            </div>
+
+            <label>Your Name *</label>
+            <input type="text" id="payUserName" placeholder="Enter your full name">
+
+            <label>12-Digit UPI Transaction / UTR Number *</label>
+            <input type="text" id="upiRefInput" placeholder="e.g., 631948271045">
+
+            <button class="btn-primary" id="submitPayBtn" onclick="submitPaymentForApproval()">Submit Payment for Verification</button>
+        </div>
+    </div>
+
+    <!-- 3. ADD TO PLAYLIST MODAL -->
+    <div id="addPlModal" class="modal hidden">
+        <div class="modal-card">
+            <h3 style="font-size:16px; margin-bottom:10px;">Select Playlist</h3>
+            <div id="selectPlaylistList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+            <button class="pill-badge" onclick="document.getElementById('addPlModal').classList.add('hidden')" style="width:100%; justify-content:center;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- 4. ADMIN LOGIN MODAL -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-card">
+            <h3 style="font-size:16px; margin-bottom:6px;">Administrator Sign In</h3>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">Enter your authorized credentials to access Admin Studio.</p>
+            <input type="email" id="loginEmail" placeholder="Administrator Email">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button class="btn-primary" onclick="doLogin()" style="margin-bottom:8px;">Sign In</button>
+            <button onclick="document.getElementById('loginModal').classList.add('hidden')" style="background:none; border:none; color:var(--muted); width:100%; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE CLOUD SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getDatabase, ref, push, remove, update, onValue, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdSqu2F6CJYZRiIIJoq9Tb6MbmWjcGGag",
+            authDomain: "vivah-carf-ai-studio.firebaseapp.com",
+            databaseURL: "https://vivah-carf-ai-studio-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "vivah-carf-ai-studio",
+            storageBucket: "vivah-carf-ai-studio.firebasestorage.app",
+            messagingSenderId: "1076234687407",
+            appId: "1:1076234687407:web:584a576d4aa0a88ab2955a",
+            measurementId: "G-NCMB0E2S9W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let allSongs = [];
+        let allPlaylists = [];
+        let allPosts = [];
+        let allPayments = [];
+        let currentGenre = "All";
+        let selectedArtist = "";
+        let currentIndex = -1;
+        window.currentSongId = "";
+        let songToAddToPl = "";
+        let isShuffle = false;
+        let isRepeat = false;
+
+        // Device identifier for tracking user's offline download requests
+        let deviceClientId = localStorage.getItem('swar_client_id');
+        if (!deviceClientId) {
+            deviceClientId = 'usr_' + Math.random().toString(36).substring(2, 12);
+            localStorage.setItem('swar_client_id', deviceClientId);
+        }
+
+        let likedIds = JSON.parse(localStorage.getItem('swar_liked_songs') || '[]');
+        let myPlaylistIds = JSON.parse(localStorage.getItem('swar_my_playlists') || '[]');
+
+        // Theme Switcher
+        const themes = ['default', 'light', 'dark'];
+        let currentThemeIdx = themes.indexOf(localStorage.getItem('swar_theme') || 'default');
+        if (currentThemeIdx < 0) currentThemeIdx = 0;
+
+        function applyTheme() {
+            const t = themes[currentThemeIdx];
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('swar_theme', t);
+            const labels = { default: 'Theme: Default', light: 'Theme: Light', dark: 'Theme: Dark' };
+            document.getElementById('themeToggleBtn').innerText = labels[t];
+        }
+        applyTheme();
+
+        window.cycleTheme = () => {
+            currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+            applyTheme();
+        };
+
+        const aiCovers = {
+            "Indie & Bollywood": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=500&q=80",
+            "Lo-Fi & Chill": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=500&q=80",
+            "Hip-Hop & Trap": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=500&q=80",
+            "Sufi & Devotional": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=500&q=80",
+            "Indian Classical & Fusion": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=500&q=80"
+        };
+
+        // 1. REAL-TIME SONGS LISTENER (EXISTING DATA PRESERVED)
+        onValue(ref(db, 'stream_songs'), (snapshot) => {
+            const data = snapshot.val();
+            allSongs = [];
+            if (data) {
+                Object.keys(data).reverse().forEach(key => {
+                    allSongs.push({ id: key, plays: 0, ...data[key] });
+                });
+            }
+            renderQuickPicksAndArtists();
+            renderUserSongs();
+            renderOfflineSongs();
+            renderAdminSongs();
+        });
+
+        // 2. REAL-TIME PLAYLISTS LISTENER
+        onValue(ref(db, 'stream_playlists'), (snapshot) => {
+            const data = snapshot.val();
+            allPlaylists = [];
+            if (data) {
+                Object.keys(data).reverse().forEach(key => {
+                    allPlaylists.push({ id: key, ...data[key] });
+                });
+            }
+            renderPlaylists();
+        });
+
+        // 3. REAL-TIME COMMUNITY POSTS LISTENER
+        onValue(ref(db, 'stream_posts'), (snapshot) => {
+            const data = snapshot.val();
+            allPosts = [];
+            if (data) {
+                Object.keys(data).reverse().forEach(key => {
+                    allPosts.push({ id: key, likes: 0, ...data[key] });
+                });
+            }
+            renderCommunityPosts();
+        });
+
+        // 4. REAL-TIME PAYMENT APPROVALS LISTENER
+        onValue(ref(db, 'stream_payments'), (snapshot) => {
+            const data = snapshot.val();
+            allPayments = [];
+            if (data) {
+                Object.keys(data).reverse().forEach(key => {
+                    allPayments.push({ id: key, ...data[key] });
+                });
+            }
+            const myApprovedCount = allPayments.filter(p => p.clientId === deviceClientId && p.status === 'approved').length;
+            document.getElementById('offlineCount').innerText = myApprovedCount;
+            renderOfflineSongs();
+            renderUserSongs();
+            renderAdminPayments();
+        });
+
+        // Tab Navigation
+        window.switchTab = (tabName, btnEl) => {
+            ['home', 'playlists', 'posts', 'offline'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+            });
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+            document.querySelectorAll('.app-tab').forEach(b => b.classList.remove('active'));
+            if (btnEl) {
+                btnEl.classList.add('active');
+            }
+        };
+
+        // Persistent Search Input
+        window.handleSearchInput = () => {
+            const inputEl = document.getElementById('searchInput');
+            const val = inputEl.value;
+            document.getElementById('clearSearchBtn').classList.toggle('hidden', val.length === 0);
+
+            if (val.trim().toLowerCase() === 'admin') {
+                inputEl.value = "";
+                document.getElementById('clearSearchBtn').classList.add('hidden');
+                if (auth.currentUser) {
+                    openAdminDashboard();
+                } else {
+                    document.getElementById('loginModal').classList.remove('hidden');
+                }
+            }
+            renderUserSongs();
+            renderPlaylists();
+            renderCommunityPosts();
+        };
+
+        window.clearSearch = () => {
+            document.getElementById('searchInput').value = "";
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderUserSongs();
+            renderPlaylists();
+            renderCommunityPosts();
+        };
+
+        function renderQuickPicksAndArtists() {
+            const qGrid = document.getElementById('quickGrid');
+            const artList = document.getElementById('artistsList');
+
+            if (allSongs.length === 0) {
+                document.getElementById('quickPicksSection').classList.add('hidden');
+                document.getElementById('artistsSection').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('quickPicksSection').classList.remove('hidden');
+            document.getElementById('artistsSection').classList.remove('hidden');
+
+            qGrid.innerHTML = "";
+            allSongs.slice(0, 4).forEach(s => {
+                const realIdx = allSongs.findIndex(x => x.id === s.id);
+                qGrid.innerHTML += `
+                    <div class="quick-card" onclick="playSong(${realIdx})">
+                        <img src="${s.cover}" alt="Cover">
+                        <div class="quick-card-title">${s.title}</div>
+                    </div>
+                `;
+            });
+
+            const artistMap = new Map();
+            allSongs.forEach(s => {
+                if (s.artist && !artistMap.has(s.artist)) artistMap.set(s.artist, s.cover);
+            });
+
+            artList.innerHTML = "";
+            artistMap.forEach((cover, name) => {
+                const activeClass = selectedArtist === name ? 'active' : '';
+                const safeName = name.replace(/'/g, "\\'");
+                artList.innerHTML += `
+                    <div class="artist-chip ${activeClass}" onclick="filterByArtist('${safeName}')">
+                        <img src="${cover}" alt="${name}">
+                        <span>${name}</span>
+                    </div>
+                `;
+            });
+        }
+
+        window.filterByArtist = (name) => {
+            selectedArtist = selectedArtist === name ? "" : name;
+            document.getElementById('resetArtistBtn').classList.toggle('hidden', !selectedArtist);
+            renderQuickPicksAndArtists();
+            renderUserSongs();
+        };
+
+        window.clearArtistFilter = () => {
+            selectedArtist = "";
+            document.getElementById('resetArtistBtn').classList.add('hidden');
+            renderQuickPicksAndArtists();
+            renderUserSongs();
+        };
+
+        window.renderUserSongs = () => {
+            const list = document.getElementById('songList');
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const filtered = allSongs.filter(s => {
+                const matchGenre =
+                    currentGenre === "All" ? true :
+                    currentGenre === "Liked" ? likedIds.includes(s.id) :
+                    s.genre === currentGenre;
+                const matchArtist = !selectedArtist || s.artist === selectedArtist;
+                const matchSearch =
+                    s.title.toLowerCase().includes(query) ||
+                    s.artist.toLowerCase().includes(query) ||
+                    (s.album && s.album.toLowerCase().includes(query)) ||
+                    (s.lyrics && s.lyrics.toLowerCase().includes(query));
+                return matchGenre && matchArtist && matchSearch;
+            });
+
+            document.getElementById('trackCountLabel').innerText = `${filtered.length} tracks`;
+            if (filtered.length === 0) {
+                list.innerHTML = `<p style="text-align:center; color:var(--muted); padding:32px;">No matching tracks found.</p>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            filtered.forEach(song => {
+                const realIdx = allSongs.findIndex(x => x.id === song.id);
+                const isPlaying = realIdx === currentIndex;
+                const isLiked = likedIds.includes(song.id);
+                const payRecord = allPayments.find(p => p.clientId === deviceClientId && p.songId === song.id);
+                const statusTag = payRecord
+                    ? (payRecord.status === 'approved' ? ' • Offline Ready' : ' • Verification Pending')
+                    : '';
+
+                list.innerHTML += `
+                    <div class="song-row ${isPlaying ? 'playing' : ''}" onclick="playSong(${realIdx})">
+                        <img src="${song.cover}" class="song-cover" alt="Cover">
+                        <div class="song-meta">
+                            <div class="song-title">${song.title}</div>
+                            <div class="song-artist">${song.artist} • <span class="meta-pill">${song.plays || 0} plays${statusTag}</span></div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="icon-btn" onclick="openAddToPlaylistModal('${song.id}', event)" title="Add to Playlist">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                            <button class="icon-btn" onclick="toggleLike(event, '${song.id}')" title="Favorite">
+                                <svg class="icon" style="${isLiked ? 'fill:currentColor;' : ''}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                            </button>
+                            <div class="play-icon">${isPlaying ? 'II' : '▶'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.setGenre = (genre, btn) => {
+            currentGenre = genre;
+            document.querySelectorAll('.genre-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderUserSongs();
+        };
+
+        window.toggleLike = (e, id) => {
+            e.stopPropagation();
+            if (likedIds.includes(id)) {
+                likedIds = likedIds.filter(x => x !== id);
+            } else {
+                likedIds.push(id);
+            }
+            localStorage.setItem('swar_liked_songs', JSON.stringify(likedIds));
+            renderUserSongs();
+        };
+
+        // Playback Controls
+        const audioEl = document.getElementById('audioElement');
+        const extBtn = document.getElementById('extLinkBtn');
+
+        window.playSong = (idx) => {
+            if (idx < 0 || idx >= allSongs.length) return;
+            currentIndex = idx;
+            const song = allSongs[idx];
+            window.currentSongId = song.id;
+
+            document.getElementById('bottomPlayer').classList.remove('hidden');
+            document.getElementById('playerCover').src = song.cover;
+            document.getElementById('playerTitle').innerText = song.title;
+            document.getElementById('playerArtist').innerText = `${song.artist} • Click for details`;
+
+            update(ref(db, 'stream_songs/' + song.id), {
+                plays: increment(1)
+            }).catch(() => {});
+
+            const src = song.audio || "";
+            if (src.startsWith('data:audio') || /\.(mp3|wav|ogg|m4a)(\?.*)?$/i.test(src)) {
+                audioEl.classList.remove('hidden');
+                extBtn.classList.add('hidden');
+                audioEl.src = src;
+                audioEl.play();
+                document.getElementById('mainPlayBtn').innerText = "Pause";
+            } else {
+                audioEl.pause();
+                audioEl.classList.add('hidden');
+                extBtn.classList.remove('hidden');
+                extBtn.href = src;
+                document.getElementById('mainPlayBtn').innerText = "Open";
+            }
+            renderUserSongs();
+        };
+
+        window.playRandomSong = () => {
+            if (allSongs.length === 0) return;
+            playSong(Math.floor(Math.random() * allSongs.length));
+        };
+
+        window.togglePlay = () => {
+            if (audioEl.paused) {
+                audioEl.play();
+                document.getElementById('mainPlayBtn').innerText = "Pause";
+            } else {
+                audioEl.pause();
+                document.getElementById('mainPlayBtn').innerText = "Play";
+            }
+        };
+
+        window.toggleShuffle = () => {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffleBtn').classList.toggle('active-mode', isShuffle);
+        };
+
+        window.toggleRepeat = () => {
+            isRepeat = !isRepeat;
+            audioEl.loop = isRepeat;
+            document.getElementById('repeatBtn').classList.toggle('active-mode', isRepeat);
+        };
+
+        window.nextSong = () => {
+            if (allSongs.length === 0) return;
+            if (isShuffle) playRandomSong();
+            else playSong((currentIndex + 1) % allSongs.length);
+        };
+
+        window.prevSong = () => {
+            if (allSongs.length === 0) return;
+            playSong((currentIndex - 1 + allSongs.length) % allSongs.length);
+        };
+
+        audioEl.addEventListener('ended', () => { if (!isRepeat) nextSong(); });
+
+        // Playlists
+        window.createPlaylist = async () => {
+            const name = document.getElementById('newPlName').value.trim();
+            const creator = document.getElementById('newPlCreator').value.trim() || "Listener";
+            const visibility = document.getElementById('newPlVisibility').value;
+
+            if (!name) return alert("Please enter a playlist title.");
+
+            const newRef = await push(ref(db, 'stream_playlists'), {
+                name,
+                creator,
+                visibility,
+                songs: [],
+                createdAt: Date.now()
+            });
+
+            myPlaylistIds.push(newRef.key);
+            localStorage.setItem('swar_my_playlists', JSON.stringify(myPlaylistIds));
+            document.getElementById('newPlName').value = "";
+            alert(`Playlist "${name}" created (${visibility.toUpperCase()}).`);
+        };
+
+        window.togglePlaylistVisibility = (plId, currentVis) => {
+            const nextVis = currentVis === 'public' ? 'private' : 'public';
+            update(ref(db, 'stream_playlists/' + plId), { visibility: nextVis });
+        };
+
+        window.openAddToPlaylistModal = (songId, e) => {
+            if (e) e.stopPropagation();
+            songToAddToPl = songId;
+            const container = document.getElementById('selectPlaylistList');
+            const myPls = allPlaylists.filter(p => myPlaylistIds.includes(p.id) || p.visibility === 'public');
+
+            if (myPls.length === 0) {
+                container.innerHTML = `<p style="font-size:12px; color:var(--muted);">No playlists available. Create a playlist in the Playlists tab first.</p>`;
+            } else {
+                container.innerHTML = "";
+                myPls.forEach(pl => {
+                    const count = Array.isArray(pl.songs) ? pl.songs.length : 0;
+                    container.innerHTML += `
+                        <button class="pill-badge" style="justify-content:space-between; padding:10px; width:100%;" onclick="addSongToPlaylist('${pl.id}')">
+                            <span>${pl.name} (${count} tracks)</span>
+                            <span class="status-badge badge-neutral">${pl.visibility}</span>
+                        </button>
+                    `;
+                });
+            }
+            document.getElementById('addPlModal').classList.remove('hidden');
+        };
+
+        window.addSongToPlaylist = async (plId) => {
+            const pl = allPlaylists.find(p => p.id === plId);
+            if (!pl || !songToAddToPl) return;
+            const existing = Array.isArray(pl.songs) ? pl.songs : [];
+            if (!existing.includes(songToAddToPl)) {
+                existing.push(songToAddToPl);
+                await update(ref(db, 'stream_playlists/' + plId), { songs: existing });
+            }
+            document.getElementById('addPlModal').classList.add('hidden');
+            alert("Track added to playlist.");
+        };
+
+        window.playPlaylist = (plId) => {
+            const pl = allPlaylists.find(p => p.id === plId);
+            if (!pl || !Array.isArray(pl.songs) || pl.songs.length === 0) {
+                return alert("This playlist currently has no tracks.");
+            }
+            const firstIdx = allSongs.findIndex(s => s.id === pl.songs[0]);
+            if (firstIdx !== -1) playSong(firstIdx);
+        };
+
+        function renderPlaylists() {
+            const grid = document.getElementById('playlistGrid');
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const visiblePls = allPlaylists.filter(pl => {
+                const isMine = myPlaylistIds.includes(pl.id);
+                const canSee = pl.visibility === 'public' || isMine;
+                const matchSearch = pl.name.toLowerCase().includes(query) || pl.creator.toLowerCase().includes(query);
+                return canSee && matchSearch;
+            });
+
+            if (visiblePls.length === 0) {
+                grid.innerHTML = `<p style="color:var(--muted); font-size:13px;">No playlists found.</p>`;
+                return;
+            }
+
+            grid.innerHTML = "";
+            visiblePls.forEach(pl => {
+                const isMine = myPlaylistIds.includes(pl.id);
+                const songCount = Array.isArray(pl.songs) ? pl.songs.length : 0;
+                grid.innerHTML += `
+                    <div class="pl-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="status-badge ${pl.visibility === 'public' ? 'badge-approved' : 'badge-neutral'}">
+                                ${pl.visibility}
+                            </span>
+                            <span style="font-size:11px; color:var(--muted);">${songCount} Tracks</span>
+                        </div>
+                        <h4 style="font-size:15px; font-weight:700; margin-bottom:3px;">${pl.name}</h4>
+                        <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Curated by ${pl.creator}</p>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-sm" style="background:var(--primary); color:var(--primary-fg); flex:1;" onclick="playPlaylist('${pl.id}')">Play Playlist</button>
+                            ${isMine ? `<button class="btn-sm btn-edit" onclick="togglePlaylistVisibility('${pl.id}', '${pl.visibility}')">Set ${pl.visibility === 'public' ? 'Private' : 'Public'}</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Community Posts
+        window.publishCommunityPost = async () => {
+            const author = document.getElementById('postAuthor').value.trim() || "Listener";
+            const category = document.getElementById('postCategory').value;
+            const content = document.getElementById('postContent').value.trim();
+
+            if (!content) return alert("Please enter your post content.");
+
+            await push(ref(db, 'stream_posts'), {
+                author,
+                category,
+                content,
+                likes: 0,
+                createdAt: Date.now()
+            });
+
+            document.getElementById('postContent').value = "";
+            alert("Your post has been published to the community feed.");
+        };
+
+        window.likeCommunityPost = (postId) => {
+            update(ref(db, 'stream_posts/' + postId), { likes: increment(1) });
+        };
+
+        function renderCommunityPosts() {
+            const feed = document.getElementById('communityFeedList');
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const filtered = allPosts.filter(p =>
+                p.content.toLowerCase().includes(query) || p.author.toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                feed.innerHTML = `<p style="color:var(--muted); font-size:13px;">No discussions yet. Start a conversation above.</p>`;
+                return;
+            }
+
+            feed.innerHTML = "";
+            filtered.forEach(p => {
+                feed.innerHTML += `
+                    <div class="card-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-weight:700; font-size:13px;">${p.author}</span>
+                            <span class="status-badge badge-neutral">${p.category}</span>
+                        </div>
+                        <p style="font-size:13px; line-height:1.5; margin-bottom:12px; white-space:pre-line;">${p.content}</p>
+                        <button class="pill-badge" onclick="likeCommunityPost('${p.id}')">Endorse (${p.likes || 0})</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Song Details & Comments
+        window.openSongDetailModal = () => {
+            if (currentIndex < 0 || !allSongs[currentIndex]) return;
+            const song = allSongs[currentIndex];
+
+            document.getElementById('detailCover').src = song.cover;
+            document.getElementById('detailTitle').innerText = song.title;
+            document.getElementById('detailArtist').innerText = `${song.artist} • ${song.genre}`;
+            document.getElementById('detailExtraInfo').innerText =
+                `Album: ${song.album || 'Single'}  |  ${song.metaExtra || 'Standard Release'}  |  ${song.plays || 0} Total Plays`;
+            document.getElementById('detailLyrics').innerText =
+                song.lyrics || "No lyrics or liner notes provided for this track.";
+
+            const commentsList = document.getElementById('songCommentsList');
+            commentsList.innerHTML = "<p style='font-size:12px; color:var(--muted);'>Loading comments...</p>";
+
+            onValue(ref(db, 'stream_comments/' + song.id), (snap) => {
+                const val = snap.val();
+                commentsList.innerHTML = "";
+                if (!val) {
+                    commentsList.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No comments yet.</p>";
+                    return;
+                }
+                Object.values(val).reverse().forEach(c => {
+                    commentsList.innerHTML += `
+                        <div style="background:var(--input-bg); padding:8px 10px; border-radius:6px; font-size:12px;">
+                            <strong>${c.user}:</strong> ${c.text}
+                        </div>
+                    `;
+                });
+            });
+
+            document.getElementById('songDetailModal').classList.remove('hidden');
+        };
+
+        window.closeDetailModal = () => {
+            document.getElementById('songDetailModal').classList.add('hidden');
+        };
+
+        window.postSongComment = async () => {
+            if (!window.currentSongId) return;
+            const user = document.getElementById('commentUserInput').value.trim() || "Listener";
+            const text = document.getElementById('commentTextInput').value.trim();
+            if (!text) return;
+
+            await push(ref(db, 'stream_comments/' + window.currentSongId), {
+                user,
+                text,
+                createdAt: Date.now()
+            });
+            document.getElementById('commentTextInput').value = "";
+        };
+
+        // ==========================================
+        // ₹1 UPI PAYMENT & 24-HOUR ADMIN APPROVAL
+        // ==========================================
+        window.triggerOfflineDownload = () => {
+            if (currentIndex < 0 || !allSongs[currentIndex]) return;
+            const song = allSongs[currentIndex];
+
+            const existingReq = allPayments.find(p => p.clientId === deviceClientId && p.songId === song.id);
+            if (existingReq) {
+                if (existingReq.status === 'approved') {
+                    downloadSongToDevice(song);
+                } else {
+                    alert("Your payment verification is currently pending. Offline download access will be activated within 24 hours of payment confirmation.");
+                }
+                return;
+            }
+
+            document.getElementById('payModal').classList.remove('hidden');
+        };
+
+        window.submitPaymentForApproval = async () => {
+            if (currentIndex < 0 || !allSongs[currentIndex]) return;
+            const song = allSongs[currentIndex];
+            const userName = document.getElementById('payUserName').value.trim();
+            const utrRef = document.getElementById('upiRefInput').value.trim();
+
+            if (!userName || !utrRef) {
+                return alert("Please enter both your name and the 12-digit UPI Transaction / UTR number.");
+            }
+
+            const btn = document.getElementById('submitPayBtn');
+            btn.disabled = true;
+            btn.innerText = "Submitting...";
+
+            try {
+                await push(ref(db, 'stream_payments'), {
+                    clientId: deviceClientId,
+                    userName,
+                    utrRef,
+                    songId: song.id,
+                    songTitle: song.title,
+                    amount: "₹1.00",
+                    upiId: "singhakshay24453@okicici",
+                    status: "pending",
+                    submittedAt: Date.now()
+                });
+
+                document.getElementById('payModal').classList.add('hidden');
+                document.getElementById('upiRefInput').value = "";
+                alert("Payment details submitted. Your offline download will be approved within 24 hours after verification.");
+            } catch (e) {
+                alert("Submission error: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Submit Payment for Verification";
+            }
+        };
+
+        function downloadSongToDevice(song) {
+            const a = document.createElement('a');
+            a.href = song.audio;
+            a.download = `${song.title} - ${song.artist}.mp3`;
+            a.target = "_blank";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function renderOfflineSongs() {
+            const list = document.getElementById('offlineSongList');
+            const myReqs = allPayments.filter(p => p.clientId === deviceClientId);
+
+            if (myReqs.length === 0) {
+                list.innerHTML = `<p style="text-align:center; color:var(--muted); padding:30px;">No offline download requests found. Select any track and click "Offline Save (₹1)" to request download access.</p>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            myReqs.forEach(req => {
+                const song = allSongs.find(s => s.id === req.songId);
+                if (!song) return;
+                const realIdx = allSongs.findIndex(x => x.id === song.id);
+                const isApproved = req.status === 'approved';
+
+                list.innerHTML += `
+                    <div class="song-row" onclick="playSong(${realIdx})">
+                        <img src="${song.cover}" class="song-cover" alt="Cover">
+                        <div class="song-meta">
+                            <div class="song-title">${song.title}</div>
+                            <div class="song-artist">UTR: ${req.utrRef} • <span class="status-badge ${isApproved ? 'badge-approved' : 'badge-pending'}">${isApproved ? 'Approved' : 'Pending (24h Review)'}</span></div>
+                        </div>
+                        ${isApproved
+                            ? `<button class="btn-sm" style="background:var(--primary); color:var(--primary-fg);" onclick="event.stopPropagation(); triggerDownloadById('${song.id}')">Download File</button>`
+                            : `<span style="font-size:11px; color:var(--muted);">Awaiting Approval</span>`
+                        }
+                    </div>
+                `;
+            });
+        }
+
+        window.triggerDownloadById = (songId) => {
+            const song = allSongs.find(s => s.id === songId);
+            if (song) downloadSongToDevice(song);
+        };
+
+        // Admin Payment Approval Queue
+        function renderAdminPayments() {
+            const container = document.getElementById('adminPaymentList');
+            const pendingCount = allPayments.filter(p => p.status === 'pending').length;
+            document.getElementById('pendingApprovalCount').innerText = `${pendingCount} Pending`;
+
+            if (allPayments.length === 0) {
+                container.innerHTML = "<p style='color:var(--muted); font-size:12px;'>No payment verification requests received yet.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+            allPayments.forEach(p => {
+                const isPending = p.status === 'pending';
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:10px;">
+                        <div style="min-width:0;">
+                            <div style="font-weight:700; font-size:13px;">${p.userName} — ${p.songTitle}</div>
+                            <div style="font-size:11px; color:var(--muted);">UTR: <strong>${p.utrRef}</strong> • Amount: ${p.amount}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                            ${isPending
+                                ? `<button class="btn-sm btn-approve" onclick="approvePayment('${p.id}')">Approve</button>
+                                   <button class="btn-sm btn-del" onclick="rejectPayment('${p.id}')">Reject</button>`
+                                : `<span class="status-badge badge-approved">Approved</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.approvePayment = (payId) => {
+            update(ref(db, 'stream_payments/' + payId), {
+                status: 'approved',
+                approvedAt: Date.now()
+            });
+        };
+
+        window.rejectPayment = (payId) => {
+            if (confirm("Reject and remove this payment record?")) {
+                remove(ref(db, 'stream_payments/' + payId));
+            }
+        };
+
+        // Admin Track Upload & Metadata Management
+        let uploadedAudioBase64 = "";
+        let uploadedCoverBase64 = "";
+
+        function smartParseFilename(rawName) {
+            let clean = rawName.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ").replace(/\(.*?\)|\[.*?\]/g, "").trim();
+            let title = clean;
+            let artist = "Akshay Studio";
+
+            if (rawName.includes("-")) {
+                const parts = rawName.replace(/\.[^/.]+$/, "").split("-");
+                if (parts.length >= 2) {
+                    artist = parts[0].replace(/[_]+/g, " ").trim();
+                    title = parts.slice(1).join(" ").replace(/[_]+/g, " ").trim();
+                }
+            }
+
+            const cap = (str) => str.replace(/\b\w/g, l => l.toUpperCase());
+            document.getElementById('songTitleInput').value = cap(title || "Untitled Track");
+            document.getElementById('songArtistInput').value = cap(artist);
+        }
+
+        window.runSmartAI = () => {
+            const fileInput = document.getElementById('audioFileInput');
+            const titleVal = document.getElementById('songTitleInput').value;
+            if (fileInput.files.length > 0) smartParseFilename(fileInput.files[0].name);
+            else if (titleVal) smartParseFilename(titleVal);
+            else alert("Select an audio file or enter a track title first.");
+        };
+
+        window.onAudioFilePicked = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 3.5 * 1024 * 1024) {
+                alert("File exceeds 3.5 MB limit. Please provide a direct audio URL for larger files.");
+                event.target.value = "";
+                return;
+            }
+            smartParseFilename(file.name);
+            const reader = new FileReader();
+            reader.onload = (e) => { uploadedAudioBase64 = e.target.result; };
+            reader.readAsDataURL(file);
+        };
+
+        window.onAudioLinkTyped = () => {
+            const url = document.getElementById('audioLinkInput').value;
+            if (url && !document.getElementById('songTitleInput').value) {
+                smartParseFilename(url.split('/').pop().split('?')[0] || "Featured Track");
+            }
+        };
+
+        window.onCoverPicked = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 500;
+                    const scale = maxW / img.width;
+                    canvas.width = maxW;
+                    canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    uploadedCoverBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                    document.getElementById('adminCoverPreview').src = uploadedCoverBase64;
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.editSong = (id) => {
+            const song = allSongs.find(s => s.id === id);
+            if (!song) return;
+            document.getElementById('editingSongId').value = id;
+            document.getElementById('songTitleInput').value = song.title;
+            document.getElementById('songArtistInput').value = song.artist;
+            document.getElementById('songGenreInput').value = song.genre;
+            document.getElementById('songAlbumInput').value = song.album || "";
+            document.getElementById('songMetaExtraInput').value = song.metaExtra || "";
+            document.getElementById('songLyricsInput').value = song.lyrics || "";
+            document.getElementById('adminCoverPreview').src = song.cover;
+            uploadedCoverBase64 = song.cover;
+            uploadedAudioBase64 = "";
+            document.getElementById('audioLinkInput').value = (song.audio && !song.audio.startsWith('data:audio')) ? song.audio : "";
+            document.getElementById('publishBtn').innerText = "Save Track Changes";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.resetAdminForm = () => {
+            document.getElementById('editingSongId').value = "";
+            document.getElementById('audioFileInput').value = "";
+            document.getElementById('audioLinkInput').value = "";
+            document.getElementById('songTitleInput').value = "";
+            document.getElementById('songArtistInput').value = "";
+            document.getElementById('songAlbumInput').value = "";
+            document.getElementById('songMetaExtraInput').value = "";
+            document.getElementById('songLyricsInput').value = "";
+            document.getElementById('coverFileInput').value = "";
+            uploadedAudioBase64 = "";
+            uploadedCoverBase64 = "";
+            document.getElementById('publishBtn').innerText = "Publish Track";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        };
+
+        window.publishSong = async () => {
+            const editId = document.getElementById('editingSongId').value;
+            const title = document.getElementById('songTitleInput').value.trim();
+            const artist = document.getElementById('songArtistInput').value.trim();
+            const genre = document.getElementById('songGenreInput').value;
+            const album = document.getElementById('songAlbumInput').value.trim();
+            const metaExtra = document.getElementById('songMetaExtraInput').value.trim();
+            const lyrics = document.getElementById('songLyricsInput').value.trim();
+            const linkAudio = document.getElementById('audioLinkInput').value.trim();
+            const finalAudio = uploadedAudioBase64 || linkAudio;
+            const finalCover = uploadedCoverBase64 || aiCovers[genre];
+
+            if (!title || !artist) return alert("Please enter both track title and artist name.");
+            if (!editId && !finalAudio) return alert("Please upload an audio file or enter a stream URL.");
+
+            const btn = document.getElementById('publishBtn');
+            btn.disabled = true;
+            btn.innerText = "Saving...";
+
+            try {
+                if (editId) {
+                    const payload = { title, artist, genre, album, metaExtra, lyrics, cover: finalCover };
+                    if (finalAudio) payload.audio = finalAudio;
+                    await update(ref(db, 'stream_songs/' + editId), payload);
+                    alert("Track details updated.");
+                } else {
+                    await push(ref(db, 'stream_songs'), {
+                        title, artist, genre, album, metaExtra, lyrics,
+                        audio: finalAudio, cover: finalCover, plays: 0, createdAt: Date.now()
+                    });
+                    alert("Track published successfully.");
+                }
+                resetAdminForm();
+            } catch (e) {
+                alert("Error: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Publish Track";
+            }
+        };
+
+        function renderAdminSongs() {
+            const container = document.getElementById('adminSongList');
+            if (allSongs.length === 0) {
+                container.innerHTML = "<p style='color:var(--muted); font-size:13px;'>No published tracks found.</p>";
+                return;
+            }
+            container.innerHTML = "";
+            allSongs.forEach(s => {
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:8px;">
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="${s.cover}" style="width:42px; height:42px; border-radius:8px; object-fit:cover;">
+                            <div style="min-width:0;">
+                                <div style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.title}</div>
+                                <div style="font-size:11px; color:var(--muted);">${s.artist} • ${s.plays || 0} plays</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-sm btn-edit" onclick="editSong('${s.id}')">Edit</button>
+                            <button class="btn-sm btn-del" onclick="deleteSong('${s.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.deleteSong = (id) => {
+            if (confirm("Are you sure you want to delete this track?")) {
+                remove(ref(db, 'stream_songs/' + id));
+            }
+        };
+
+        // Authentication
+        onAuthStateChanged(auth, (user) => {
+            document.getElementById('secretDashboardBtn').classList.toggle('hidden', !user);
+        });
+
+        window.openAdminDashboard = () => {
+            if (auth.currentUser) {
+                document.getElementById('user-view').classList.add('hidden');
+                document.getElementById('mainAppTabs').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+            } else {
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
+        };
+
+        window.doLogin = () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => {
+                    document.getElementById('loginModal').classList.add('hidden');
+                    openAdminDashboard();
+                })
+                .catch(() => alert("Invalid administrator credentials."));
+        };
+
+        window.backToMusic = () => {
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('mainAppTabs').classList.remove('hidden');
+            document.getElementById('user-view').classList.remove('hidden');
+        };
+
+        window.adminLogout = () => {
+            signOut(auth).then(() => {
+                document.getElementById('secretDashboardBtn').classList.add('hidden');
+                backToMusic();
+            });
+        };
+    </script>
+
+    <!-- OVERLAY CLEANUP -->
+    <script>
+        function nukeNetlifyWatermark() {
+            const allowedIds = ['user-view', 'bottomPlayer', 'admin-view', 'loginModal', 'songDetailModal', 'payModal', 'addPlModal', 'mainAppTabs'];
+            document.querySelectorAll('body > *').forEach(el => {
+                if (el.tagName === 'NAV' || el.tagName === 'SCRIPT' || allowedIds.includes(el.id)) return;
+                const html = (el.outerHTML || '') + (el.shadowRoot ? el.shadowRoot.innerHTML : '');
+                if (/netlify/i.test(html) || el.hasAttribute('data-netlify-deploy-id')) {
+                    el.remove();
+                }
+            });
+        }
+        nukeNetlifyWatermark();
+        new MutationObserver(nukeNetlifyWatermark).observe(document.body, { childList: true, subtree: true });
+        setInterval(nukeNetlifyWatermark, 400);
+    </script>
+</body>
+</html>
