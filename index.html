@@ -612,6 +612,8 @@
             justify-content: center;
             border: none;
             cursor: pointer;
+            font-weight: 700;
+            font-size: 11px;
         }
 
         .player-sub-bar {
@@ -767,10 +769,10 @@
 
     <!-- MAIN NAVIGATION TABS -->
     <div id="mainAppTabs" class="app-tabs">
-        <button class="app-tab active" onclick="switchTab('home', this)">Browse Catalog</button>
-        <button class="app-tab" onclick="switchTab('playlists', this)">Playlists</button>
-        <button class="app-tab" onclick="switchTab('posts', this)">Community Feed</button>
-        <button class="app-tab" onclick="switchTab('offline', this)">Offline Downloads</button>
+        <button class="app-tab active" data-tab="home" onclick="switchTab('home', this)">Browse Catalog</button>
+        <button class="app-tab" data-tab="playlists" onclick="switchTab('playlists', this)">Playlists</button>
+        <button class="app-tab" data-tab="posts" onclick="switchTab('posts', this)">Community Feed</button>
+        <button class="app-tab" data-tab="offline" onclick="switchTab('offline', this)">Offline Downloads</button>
     </div>
 
     <!-- ========================================== -->
@@ -914,7 +916,7 @@
             <button class="mini-pill" onclick="openSongDetailModal()">Details & Comments</button>
             <button class="mini-pill accent" onclick="triggerOfflineDownload()">Offline Save (₹1)</button>
         </div>
-        <a id="extLinkBtn" href="#" target="_blank" class="btn-primary hidden" style="margin-top:8px; text-align:center; display:block; text-decoration:none;">Open External Stream</a>
+        <a id="extLinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary hidden" style="margin-top:8px; text-align:center; display:block; text-decoration:none;">Open External Stream</a>
     </div>
 
     <!-- ========================================== -->
@@ -1106,6 +1108,23 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // XSS Protection Helper for Public User Inputs
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function normalizeArray(val) {
+            if (Array.isArray(val)) return val.filter(Boolean);
+            if (val && typeof val === 'object') return Object.values(val).filter(Boolean);
+            return [];
+        }
+
         let allSongs = [];
         let allPlaylists = [];
         let allPosts = [];
@@ -1210,14 +1229,19 @@
             renderAdminPayments();
         });
 
-        // Tab Navigation
+        // Tab Navigation (Fixed active highlight sync for Navbar & Tabs)
         window.switchTab = (tabName, btnEl) => {
             ['home', 'playlists', 'posts', 'offline'].forEach(t => {
                 document.getElementById('tab-' + t).classList.add('hidden');
             });
             document.getElementById('tab-' + tabName).classList.remove('hidden');
 
-            document.querySelectorAll('.app-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.app-tab').forEach(b => {
+                b.classList.remove('active');
+                if (!btnEl && b.getAttribute('data-tab') === tabName) {
+                    b.classList.add('active');
+                }
+            });
             if (btnEl) {
                 btnEl.classList.add('active');
             }
@@ -1269,8 +1293,8 @@
                 const realIdx = allSongs.findIndex(x => x.id === s.id);
                 qGrid.innerHTML += `
                     <div class="quick-card" onclick="playSong(${realIdx})">
-                        <img src="${s.cover}" alt="Cover">
-                        <div class="quick-card-title">${s.title}</div>
+                        <img src="${escapeHTML(s.cover)}" alt="Cover">
+                        <div class="quick-card-title">${escapeHTML(s.title)}</div>
                     </div>
                 `;
             });
@@ -1283,11 +1307,11 @@
             artList.innerHTML = "";
             artistMap.forEach((cover, name) => {
                 const activeClass = selectedArtist === name ? 'active' : '';
-                const safeName = name.replace(/'/g, "\\'");
+                const safeNameAttr = escapeHTML(name).replace(/'/g, "\'");
                 artList.innerHTML += `
-                    <div class="artist-chip ${activeClass}" onclick="filterByArtist('${safeName}')">
-                        <img src="${cover}" alt="${name}">
-                        <span>${name}</span>
+                    <div class="artist-chip ${activeClass}" onclick="filterByArtist('${safeNameAttr}')">
+                        <img src="${escapeHTML(cover)}" alt="${escapeHTML(name)}">
+                        <span>${escapeHTML(name)}</span>
                     </div>
                 `;
             });
@@ -1318,8 +1342,8 @@
                     s.genre === currentGenre;
                 const matchArtist = !selectedArtist || s.artist === selectedArtist;
                 const matchSearch =
-                    s.title.toLowerCase().includes(query) ||
-                    s.artist.toLowerCase().includes(query) ||
+                    (s.title || "").toLowerCase().includes(query) ||
+                    (s.artist || "").toLowerCase().includes(query) ||
                     (s.album && s.album.toLowerCase().includes(query)) ||
                     (s.lyrics && s.lyrics.toLowerCase().includes(query));
                 return matchGenre && matchArtist && matchSearch;
@@ -1343,16 +1367,16 @@
 
                 list.innerHTML += `
                     <div class="song-row ${isPlaying ? 'playing' : ''}" onclick="playSong(${realIdx})">
-                        <img src="${song.cover}" class="song-cover" alt="Cover">
+                        <img src="${escapeHTML(song.cover)}" class="song-cover" alt="Cover">
                         <div class="song-meta">
-                            <div class="song-title">${song.title}</div>
-                            <div class="song-artist">${song.artist} • <span class="meta-pill">${song.plays || 0} plays${statusTag}</span></div>
+                            <div class="song-title">${escapeHTML(song.title)}</div>
+                            <div class="song-artist">${escapeHTML(song.artist)} • <span class="meta-pill">${song.plays || 0} plays${statusTag}</span></div>
                         </div>
                         <div class="song-actions">
-                            <button class="icon-btn" onclick="openAddToPlaylistModal('${song.id}', event)" title="Add to Playlist">
+                            <button class="icon-btn" onclick="openAddToPlaylistModal('${escapeHTML(song.id)}', event)" title="Add to Playlist">
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             </button>
-                            <button class="icon-btn" onclick="toggleLike(event, '${song.id}')" title="Favorite">
+                            <button class="icon-btn" onclick="toggleLike(event, '${escapeHTML(song.id)}')" title="Favorite">
                                 <svg class="icon" style="${isLiked ? 'fill:currentColor;' : ''}" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                             </button>
                             <div class="play-icon">${isPlaying ? 'II' : '▶'}</div>
@@ -1493,11 +1517,11 @@
             } else {
                 container.innerHTML = "";
                 myPls.forEach(pl => {
-                    const count = Array.isArray(pl.songs) ? pl.songs.length : 0;
+                    const songsArr = normalizeArray(pl.songs);
                     container.innerHTML += `
-                        <button class="pill-badge" style="justify-content:space-between; padding:10px; width:100%;" onclick="addSongToPlaylist('${pl.id}')">
-                            <span>${pl.name} (${count} tracks)</span>
-                            <span class="status-badge badge-neutral">${pl.visibility}</span>
+                        <button class="pill-badge" style="justify-content:space-between; padding:10px; width:100%;" onclick="addSongToPlaylist('${escapeHTML(pl.id)}')">
+                            <span>${escapeHTML(pl.name)} (${songsArr.length} tracks)</span>
+                            <span class="status-badge badge-neutral">${escapeHTML(pl.visibility)}</span>
                         </button>
                     `;
                 });
@@ -1508,7 +1532,7 @@
         window.addSongToPlaylist = async (plId) => {
             const pl = allPlaylists.find(p => p.id === plId);
             if (!pl || !songToAddToPl) return;
-            const existing = Array.isArray(pl.songs) ? pl.songs : [];
+            const existing = normalizeArray(pl.songs);
             if (!existing.includes(songToAddToPl)) {
                 existing.push(songToAddToPl);
                 await update(ref(db, 'stream_playlists/' + plId), { songs: existing });
@@ -1519,11 +1543,13 @@
 
         window.playPlaylist = (plId) => {
             const pl = allPlaylists.find(p => p.id === plId);
-            if (!pl || !Array.isArray(pl.songs) || pl.songs.length === 0) {
+            const songsArr = pl ? normalizeArray(pl.songs) : [];
+            if (!pl || songsArr.length === 0) {
                 return alert("This playlist currently has no tracks.");
             }
-            const firstIdx = allSongs.findIndex(s => s.id === pl.songs[0]);
+            const firstIdx = allSongs.findIndex(s => s.id === songsArr[0]);
             if (firstIdx !== -1) playSong(firstIdx);
+            else alert("Tracks in this playlist are no longer in the catalog.");
         };
 
         function renderPlaylists() {
@@ -1533,7 +1559,7 @@
             const visiblePls = allPlaylists.filter(pl => {
                 const isMine = myPlaylistIds.includes(pl.id);
                 const canSee = pl.visibility === 'public' || isMine;
-                const matchSearch = pl.name.toLowerCase().includes(query) || pl.creator.toLowerCase().includes(query);
+                const matchSearch = (pl.name || "").toLowerCase().includes(query) || (pl.creator || "").toLowerCase().includes(query);
                 return canSee && matchSearch;
             });
 
@@ -1545,20 +1571,20 @@
             grid.innerHTML = "";
             visiblePls.forEach(pl => {
                 const isMine = myPlaylistIds.includes(pl.id);
-                const songCount = Array.isArray(pl.songs) ? pl.songs.length : 0;
+                const songsArr = normalizeArray(pl.songs);
                 grid.innerHTML += `
                     <div class="pl-card">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <span class="status-badge ${pl.visibility === 'public' ? 'badge-approved' : 'badge-neutral'}">
-                                ${pl.visibility}
+                                ${escapeHTML(pl.visibility)}
                             </span>
-                            <span style="font-size:11px; color:var(--muted);">${songCount} Tracks</span>
+                            <span style="font-size:11px; color:var(--muted);">${songsArr.length} Tracks</span>
                         </div>
-                        <h4 style="font-size:15px; font-weight:700; margin-bottom:3px;">${pl.name}</h4>
-                        <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Curated by ${pl.creator}</p>
+                        <h4 style="font-size:15px; font-weight:700; margin-bottom:3px;">${escapeHTML(pl.name)}</h4>
+                        <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Curated by ${escapeHTML(pl.creator)}</p>
                         <div style="display:flex; gap:6px;">
-                            <button class="btn-sm" style="background:var(--primary); color:var(--primary-fg); flex:1;" onclick="playPlaylist('${pl.id}')">Play Playlist</button>
-                            ${isMine ? `<button class="btn-sm btn-edit" onclick="togglePlaylistVisibility('${pl.id}', '${pl.visibility}')">Set ${pl.visibility === 'public' ? 'Private' : 'Public'}</button>` : ''}
+                            <button class="btn-sm" style="background:var(--primary); color:var(--primary-fg); flex:1;" onclick="playPlaylist('${escapeHTML(pl.id)}')">Play Playlist</button>
+                            ${isMine ? `<button class="btn-sm btn-edit" onclick="togglePlaylistVisibility('${escapeHTML(pl.id)}', '${escapeHTML(pl.visibility)}')">Set ${pl.visibility === 'public' ? 'Private' : 'Public'}</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1594,7 +1620,7 @@
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
             const filtered = allPosts.filter(p =>
-                p.content.toLowerCase().includes(query) || p.author.toLowerCase().includes(query)
+                (p.content || "").toLowerCase().includes(query) || (p.author || "").toLowerCase().includes(query)
             );
 
             if (filtered.length === 0) {
@@ -1607,11 +1633,11 @@
                 feed.innerHTML += `
                     <div class="card-box">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-weight:700; font-size:13px;">${p.author}</span>
-                            <span class="status-badge badge-neutral">${p.category}</span>
+                            <span style="font-weight:700; font-size:13px;">${escapeHTML(p.author)}</span>
+                            <span class="status-badge badge-neutral">${escapeHTML(p.category)}</span>
                         </div>
-                        <p style="font-size:13px; line-height:1.5; margin-bottom:12px; white-space:pre-line;">${p.content}</p>
-                        <button class="pill-badge" onclick="likeCommunityPost('${p.id}')">Endorse (${p.likes || 0})</button>
+                        <p style="font-size:13px; line-height:1.5; margin-bottom:12px; white-space:pre-line;">${escapeHTML(p.content)}</p>
+                        <button class="pill-badge" onclick="likeCommunityPost('${escapeHTML(p.id)}')">Endorse (${p.likes || 0})</button>
                     </div>
                 `;
             });
@@ -1643,7 +1669,7 @@
                 Object.values(val).reverse().forEach(c => {
                     commentsList.innerHTML += `
                         <div style="background:var(--input-bg); padding:8px 10px; border-radius:6px; font-size:12px;">
-                            <strong>${c.user}:</strong> ${c.text}
+                            <strong>${escapeHTML(c.user)}:</strong> ${escapeHTML(c.text)}
                         </div>
                     `;
                 });
@@ -1733,6 +1759,7 @@
             a.href = song.audio;
             a.download = `${song.title} - ${song.artist}.mp3`;
             a.target = "_blank";
+            a.rel = "noopener noreferrer";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1756,13 +1783,13 @@
 
                 list.innerHTML += `
                     <div class="song-row" onclick="playSong(${realIdx})">
-                        <img src="${song.cover}" class="song-cover" alt="Cover">
+                        <img src="${escapeHTML(song.cover)}" class="song-cover" alt="Cover">
                         <div class="song-meta">
-                            <div class="song-title">${song.title}</div>
-                            <div class="song-artist">UTR: ${req.utrRef} • <span class="status-badge ${isApproved ? 'badge-approved' : 'badge-pending'}">${isApproved ? 'Approved' : 'Pending (24h Review)'}</span></div>
+                            <div class="song-title">${escapeHTML(song.title)}</div>
+                            <div class="song-artist">UTR: ${escapeHTML(req.utrRef)} • <span class="status-badge ${isApproved ? 'badge-approved' : 'badge-pending'}">${isApproved ? 'Approved' : 'Pending (24h Review)'}</span></div>
                         </div>
                         ${isApproved
-                            ? `<button class="btn-sm" style="background:var(--primary); color:var(--primary-fg);" onclick="event.stopPropagation(); triggerDownloadById('${song.id}')">Download File</button>`
+                            ? `<button class="btn-sm" style="background:var(--primary); color:var(--primary-fg);" onclick="event.stopPropagation(); triggerDownloadById('${escapeHTML(song.id)}')">Download File</button>`
                             : `<span style="font-size:11px; color:var(--muted);">Awaiting Approval</span>`
                         }
                     </div>
@@ -1792,13 +1819,13 @@
                 container.innerHTML += `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:10px;">
                         <div style="min-width:0;">
-                            <div style="font-weight:700; font-size:13px;">${p.userName} — ${p.songTitle}</div>
-                            <div style="font-size:11px; color:var(--muted);">UTR: <strong>${p.utrRef}</strong> • Amount: ${p.amount}</div>
+                            <div style="font-weight:700; font-size:13px;">${escapeHTML(p.userName)} — ${escapeHTML(p.songTitle)}</div>
+                            <div style="font-size:11px; color:var(--muted);">UTR: <strong>${escapeHTML(p.utrRef)}</strong> • Amount: ${escapeHTML(p.amount)}</div>
                         </div>
                         <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                             ${isPending
-                                ? `<button class="btn-sm btn-approve" onclick="approvePayment('${p.id}')">Approve</button>
-                                   <button class="btn-sm btn-del" onclick="rejectPayment('${p.id}')">Reject</button>`
+                                ? `<button class="btn-sm btn-approve" onclick="approvePayment('${escapeHTML(p.id)}')">Approve</button>
+                                   <button class="btn-sm btn-del" onclick="rejectPayment('${escapeHTML(p.id)}')">Reject</button>`
                                 : `<span class="status-badge badge-approved">Approved</span>`
                             }
                         </div>
@@ -1979,15 +2006,15 @@
                 container.innerHTML += `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:8px;">
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-                            <img src="${s.cover}" style="width:42px; height:42px; border-radius:8px; object-fit:cover;">
+                            <img src="${escapeHTML(s.cover)}" style="width:42px; height:42px; border-radius:8px; object-fit:cover;">
                             <div style="min-width:0;">
-                                <div style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.title}</div>
-                                <div style="font-size:11px; color:var(--muted);">${s.artist} • ${s.plays || 0} plays</div>
+                                <div style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(s.title)}</div>
+                                <div style="font-size:11px; color:var(--muted);">${escapeHTML(s.artist)} • ${s.plays || 0} plays</div>
                             </div>
                         </div>
                         <div style="display:flex; gap:5px;">
-                            <button class="btn-sm btn-edit" onclick="editSong('${s.id}')">Edit</button>
-                            <button class="btn-sm btn-del" onclick="deleteSong('${s.id}')">Delete</button>
+                            <button class="btn-sm btn-edit" onclick="editSong('${escapeHTML(s.id)}')">Edit</button>
+                            <button class="btn-sm btn-del" onclick="deleteSong('${escapeHTML(s.id)}')">Delete</button>
                         </div>
                     </div>
                 `;
